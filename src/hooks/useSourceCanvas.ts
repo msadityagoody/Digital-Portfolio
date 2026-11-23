@@ -19,11 +19,12 @@ const POS_Y = 0.22;
 export function useSourceCanvas(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   imgRef: RefObject<HTMLImageElement | null>,
+  enabled: boolean,
 ) {
   useEffect(() => {
     const canvas = canvasRef.current;
     const img = imgRef.current;
-    if (!canvas || !img) return;
+    if (!enabled || !canvas || !img) return;
     const glyphs = sourceGlyphs();
     let raf = 0;
     let cancelled = false;
@@ -118,5 +119,5 @@ export function useSourceCanvas(
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [canvasRef, imgRef]);
+  }, [canvasRef, imgRef, enabled]);
 }

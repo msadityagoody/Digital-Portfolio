@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { profile } from '../data/profile';
 import { SectionHeader } from '../components/SectionHeader';
 import { useReveal } from '../hooks/useReveal';
-import { MOTION_OK, SplitText, gsap, useGSAP } from '../lib/gsap';
+import { DESKTOP_MOTION, SplitText, gsap, useGSAP } from '../lib/gsap';
 
 export function About() {
   const root = useRef<HTMLElement>(null);
@@ -13,7 +13,7 @@ export function About() {
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
-      mm.add(MOTION_OK, () => {
+      mm.add(DESKTOP_MOTION, () => {
         const split = SplitText.create(lead.current, {
           type: 'words',
           autoSplit: true,

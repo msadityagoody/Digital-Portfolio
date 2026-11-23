@@ -7,6 +7,7 @@ gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
 
 /** All motion is opt-in: it only runs when the user has not asked for reduced motion. */
 export const MOTION_OK = '(prefers-reduced-motion: no-preference)';
+export const DESKTOP_MOTION = `(min-width: 768px) and (pointer: fine) and ${MOTION_OK}`;
 
 /** Same breakpoint as the `deck:` Tailwind variant in index.css. */
 export const DECK_MQ = '(min-width: 64rem) and (min-height: 45rem)';

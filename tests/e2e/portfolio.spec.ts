@@ -202,23 +202,62 @@ test('keyboard: skip link is first and works', async ({ page }) => {
 });
 
 test('intro: plays once, hands off to the hero, then stays away for the session', async ({ page }) => {
+  test.skip(await isMobileProject(page), 'desktop intro');
   const errors = trackErrors(page);
   // Don't wait for the full load event (images): the intro is only ~2s long.
   await page.goto('./', { waitUntil: 'commit' });
   const skip = page.getByRole('button', { name: 'Skip intro' });
   await expect(skip).toBeVisible();
   await expect(skip).toBeHidden({ timeout: 6000 });
+  await expect(page.locator('html')).not.toHaveCSS('overflow', 'hidden');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('button', { name: 'Skip intro' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
-test('intro: skip button and Escape shorten it', async ({ page }) => {
-  await page.goto('./');
-  // The intro may already be finishing on a slow, parallel run: skipping must never hang.
-  await page.getByRole('button', { name: 'Skip intro' }).click({ timeout: 1500 }).catch(() => undefined);
-  await expect(page.getByRole('button', { name: 'Skip intro' })).toBeHidden({ timeout: 2500 });
+test('intro: button dismisses immediately and releases scrolling', async ({ page }) => {
+  test.skip(await isMobileProject(page), 'desktop intro');
+  await page.goto('./', { waitUntil: 'commit' });
+  const skip = page.getByRole('button', { name: 'Skip intro' });
+  await skip.click();
+  await expect(skip).toHaveCount(0, { timeout: 500 });
+  await expect(page.locator('html')).not.toHaveCSS('overflow', 'hidden');
+  await expect(page.locator('#hero-title')).toBeVisible();
+});
+
+test('intro: Escape during the panel exit cancels the hero entrance', async ({ page }) => {
+  test.skip(await isMobileProject(page), 'desktop intro');
+  await page.goto('./', { waitUntil: 'commit' });
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('[data-intro-panel]');
+    return panel && panel.getBoundingClientRect().top < -innerHeight * 0.1;
+  });
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-intro-panel]')).toHaveCount(0, { timeout: 500 });
+  await expect(page.locator('[data-portrait]')).toHaveCSS('clip-path', 'none');
+  await expect(page.locator('html')).not.toHaveCSS('overflow', 'hidden');
+});
+
+test('intro: a stalled animation releases the page on its wall-clock deadline', async ({ page }) => {
+  test.skip(await isMobileProject(page), 'desktop intro');
+  await page.addInitScript(() => { window.requestAnimationFrame = () => 0; });
+  await page.goto('./', { waitUntil: 'commit' });
+  await expect(page.locator('[data-intro-panel]')).toBeAttached();
+  await expect(page.locator('[data-intro-panel]')).toHaveCount(0, { timeout: 5000 });
+  await expect(page.locator('[data-portrait]')).toHaveCSS('clip-path', 'none');
+  await expect(page.locator('#hero-title')).toBeVisible();
+  await expect(page.locator('html')).not.toHaveCSS('overflow', 'hidden');
+});
+
+test('intro: narrowing the viewport mid-intro immediately restores native scrolling', async ({ page }) => {
+  test.skip(await isMobileProject(page), 'starts with desktop intro');
+  await page.goto('./', { waitUntil: 'commit' });
+  await expect(page.locator('[data-intro-panel]')).toBeAttached();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('[data-intro-panel]')).toHaveCount(0, { timeout: 500 });
+  await expect(page.locator('#hero-title')).toBeVisible();
+  await expect(page.locator('.hero-line, html.lenis')).toHaveCount(0);
   await expect(page.locator('html')).not.toHaveCSS('overflow', 'hidden');
 });
 
@@ -263,7 +302,6 @@ test('hero portrait: real photo loads with alt text, placeholder gone', async ({
 test('hero portrait: hover reveals the source; toggle shows it in full (keyboard/touch too)', async ({ page }) => {
   await page.goto('./');
   const layer = page.locator('[data-source-layer]');
-  await expect(page.locator('[data-source-canvas]')).toHaveAttribute('data-rendered', 'true');
 
   const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
   if (finePointer) {
@@ -279,6 +317,7 @@ test('hero portrait: hover reveals the source; toggle shows it in full (keyboard
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'View photo' })).toHaveAttribute('aria-pressed', 'true');
   await expect(layer).toHaveAttribute('data-mode', 'full');
+  await expect(page.locator('[data-source-canvas]')).toHaveAttribute('data-rendered', 'true');
   await page.getByRole('button', { name: 'View photo' }).click();
   await expect(layer).toHaveAttribute('data-mode', 'off');
 });

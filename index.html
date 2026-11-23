@@ -18,6 +18,14 @@
       content="Building software that connects complex systems with intuitive experiences."
     />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <link
+      rel="preload"
+      as="image"
+      media="(width < 768px), (pointer: coarse)"
+      imagesrcset="%BASE_URL%portrait-640.webp 640w, %BASE_URL%portrait.webp 1122w"
+      imagesizes="min(calc(100vw - clamp(2.5rem, 8vw, 6rem)), 28rem, 48svh)"
+      fetchpriority="high"
+    />
   </head>
   <body>
     <div id="root"></div>

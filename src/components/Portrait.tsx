@@ -21,14 +21,18 @@ function PhotoPortrait({ photo }: { photo: NonNullable<typeof profile.portrait> 
   const label = useRef<HTMLSpanElement>(null);
   const raf = useRef(0);
   const [mode, setMode] = useState<Mode>('off');
-  useSourceCanvas(canvas, img);
+  const [prepareSource, setPrepareSource] = useState(false);
+  useSourceCanvas(canvas, img, prepareSource);
 
   const onMove = (e: ReactPointerEvent<HTMLElement>) => {
     if (e.pointerType !== 'mouse') return;
     const { clientX, clientY } = e;
     // Read currentTarget now: React clears it after the handler returns.
     const fig = e.currentTarget;
-    if (mode === 'off') setMode('hover');
+    if (mode === 'off') {
+      setPrepareSource(true);
+      setMode('hover');
+    }
     cancelAnimationFrame(raf.current);
     raf.current = requestAnimationFrame(() => {
       const l = layer.current;
@@ -88,7 +92,10 @@ function PhotoPortrait({ photo }: { photo: NonNullable<typeof profile.portrait> 
         <button
           type="button"
           aria-pressed={mode === 'full'}
-          onClick={() => setMode((m) => (m === 'full' ? 'off' : 'full'))}
+          onClick={() => {
+            setPrepareSource(true);
+            setMode((m) => (m === 'full' ? 'off' : 'full'));
+          }}
           className="group flex h-11 items-center gap-2.5 rounded-[12px] border border-line bg-bg/75 py-1 pl-1 pr-3.5 font-mono text-xs font-medium text-ink backdrop-blur-md transition-colors duration-300 hover:border-muted/60"
         >
           <span aria-hidden="true" className="grid h-full place-items-center rounded-[9px] bg-accent px-2 text-accent-ink">

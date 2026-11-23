@@ -1,7 +1,5 @@
-/**
- * Coordinates the intro loader with the hero entrance.
- * The intro plays once per browser session and never for reduced-motion users.
- */
+import { DESKTOP_MOTION } from './gsap';
+
 const KEY = 'intro-seen';
 
 function readSeen() {
@@ -12,23 +10,27 @@ function readSeen() {
   }
 }
 
-export const shouldPlayIntro =
+const desktopMotion =
   typeof window !== 'undefined' &&
-  !readSeen() &&
-  window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  window.matchMedia(DESKTOP_MOTION).matches;
+export const shouldPlayIntro = desktopMotion && !readSeen();
 
-let resolveIntro: () => void = () => undefined;
-export const introDone: Promise<void> = shouldPlayIntro
+type HeroEntrance = 'animate' | 'show';
+const cancellation = new AbortController();
+export const introCancelled = cancellation.signal;
+let resolveIntro: (entrance: HeroEntrance) => void = () => undefined;
+export const introDone: Promise<HeroEntrance> = shouldPlayIntro
   ? new Promise((resolve) => {
       resolveIntro = resolve;
     })
-  : Promise.resolve();
+  : Promise.resolve(desktopMotion ? 'animate' : 'show');
 
-export function finishIntro() {
+export function finishIntro(entrance: HeroEntrance) {
+  if (entrance === 'show') cancellation.abort();
   try {
     sessionStorage.setItem(KEY, '1');
   } catch {
     /* storage unavailable: intro simply plays again next visit */
   }
-  resolveIntro();
+  resolveIntro(entrance);
 }

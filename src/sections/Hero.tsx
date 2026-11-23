@@ -3,8 +3,8 @@ import { profile } from '../data/profile';
 import { education } from '../data/experience';
 import { ButtonLink } from '../components/ButtonLink';
 import { Portrait } from '../components/Portrait';
-import { introDone } from '../lib/intro';
-import { MOTION_OK, SplitText, gsap, useGSAP } from '../lib/gsap';
+import { introCancelled, introDone } from '../lib/intro';
+import { DESKTOP_MOTION, SplitText, gsap, useGSAP } from '../lib/gsap';
 
 export function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -15,26 +15,24 @@ export function Hero() {
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
-      mm.add(MOTION_OK, (ctx) => {
+      mm.add(DESKTOP_MOTION, () => {
         const q = gsap.utils.selector(root);
         const fades = q('[data-hero-fade]');
         const portrait = q('[data-portrait]');
         const portraitInner = q('[data-portrait-inner]');
         const card = q('[data-portrait-card]');
 
-        // Hidden state is set before first paint; the entrance waits for the intro loader.
-        gsap.set([title.current, ...fades, ...card], { autoAlpha: 0 });
         const r = profile.portrait ? '0px' : '20px';
-        gsap.set(portrait, { clipPath: `inset(100% 0% 0% 0% round ${r})` });
 
         let cancelled = false;
-        let split: SplitText | undefined;
+        const entranceEffects = gsap.context(() => {}, root);
+        const showHero = () => entranceEffects.revert();
+        introCancelled.addEventListener('abort', showHero);
 
-        introDone.then(() => {
-          if (cancelled) return;
-          ctx.add(() => {
-            gsap.set(title.current, { autoAlpha: 1 });
-            split = SplitText.create(title.current, {
+        introDone.then((entrance) => {
+          if (cancelled || introCancelled.aborted || entrance === 'show') return;
+          entranceEffects.add(() => {
+            const split = SplitText.create(title.current, {
               type: 'lines',
               mask: 'lines',
               linesClass: 'hero-line',
@@ -43,6 +41,8 @@ export function Hero() {
                 gsap.from(self.lines, { yPercent: 115, duration: 1.15, ease: 'expo.out', stagger: 0.085, delay: 0.05 }),
             });
 
+            gsap.set([...fades, ...card], { autoAlpha: 0 });
+            gsap.set(portrait, { clipPath: `inset(100% 0% 0% 0% round ${r})` });
             gsap
               .timeline({ defaults: { ease: 'expo.out' } })
               .to(portrait, { clipPath: `inset(0% 0% 0% 0% round ${r})`, duration: 1.5, ease: 'expo.inOut' }, 0)
@@ -51,8 +51,9 @@ export function Hero() {
               .from(fades, { y: 22, duration: 1, stagger: 0.07 }, 0.35)
               .to(card, { autoAlpha: 1, duration: 0.8 }, 1.05)
               .from(card, { y: 18, duration: 1 }, 1.05);
+            return () => split.revert();
           });
-        });
+        }).catch(showHero);
 
         // Subtle parallax while scrolling away from the hero.
         const st = { trigger: root.current, start: 'top top', end: 'bottom top', scrub: true };
@@ -62,7 +63,8 @@ export function Hero() {
 
         return () => {
           cancelled = true;
-          split?.revert();
+          introCancelled.removeEventListener('abort', showHero);
+          showHero();
         };
       });
       return () => mm.revert();

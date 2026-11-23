@@ -9,6 +9,7 @@ const baseURL = `http://localhost:${PORT}/Digital-Portfolio/`;
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  testIgnore: '**/mobile-startup.spec.ts',
   fullyParallel: true,
   reporter: [['list']],
   use: {
@@ -23,6 +24,7 @@ export default defineConfig({
     timeout: 180_000,
   },
   projects: [
+    { name: 'fresh-startup', testMatch: '**/mobile-startup.spec.ts', testIgnore: [] },
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
     { name: 'laptop', use: { viewport: { width: 1280, height: 720 } } },
     { name: 'tablet-land', use: { viewport: { width: 1024, height: 768 } } },

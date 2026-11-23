@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { EASE, MOTION_OK, ScrollTrigger, gsap, useGSAP } from '../lib/gsap';
+import { DESKTOP_MOTION, EASE, MOTION_OK, ScrollTrigger, gsap, useGSAP } from '../lib/gsap';
 
 /**
  * Fades and lifts every `[data-reveal]` element inside `scope` as it scrolls into view.
@@ -9,9 +9,23 @@ export function useReveal(scope: RefObject<HTMLElement | null>) {
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
-      mm.add(MOTION_OK, () => {
+      mm.add({ motion: MOTION_OK, desktop: DESKTOP_MOTION }, (ctx) => {
+        if (!ctx.conditions?.motion) return;
         const items = gsap.utils.toArray<HTMLElement>('[data-reveal]', scope.current);
         if (!items.length) return;
+
+        // Leave mobile content visible until it enters the viewport. This avoids
+        // measuring every offscreen reveal with ScrollTrigger during initial render.
+        if (!ctx.conditions.desktop) {
+          const observer = new IntersectionObserver((entries) => {
+            const batch = entries.filter((entry) => entry.isIntersecting).map((entry) => entry.target);
+            if (!batch.length) return;
+            batch.forEach((el) => observer.unobserve(el));
+            ctx.add(() => { gsap.from(batch, { opacity: 0, y: 16, duration: 0.45, ease: EASE }); });
+          });
+          items.forEach((el) => observer.observe(el));
+          return () => observer.disconnect();
+        }
 
         // Opacity only (not visibility): content stays in the accessibility tree before it is revealed.
         gsap.set(items, { opacity: 0, y: 28 });

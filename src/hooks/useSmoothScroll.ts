@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import Lenis from 'lenis';
-import { MOTION_OK, ScrollTrigger, gsap } from '../lib/gsap';
+import { DESKTOP_MOTION, ScrollTrigger, gsap } from '../lib/gsap';
 
 let lenis: Lenis | null = null;
 const NAV_OFFSET = -72;
@@ -15,7 +15,7 @@ export const getLenis = () => lenis;
  */
 export function useSmoothScroll() {
   useEffect(() => {
-    const mq = window.matchMedia(MOTION_OK);
+    const mq = window.matchMedia(DESKTOP_MOTION);
     const raf = (time: number) => lenis?.raf(time * 1000);
 
     const start = () => {
