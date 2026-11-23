@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4173;
+const baseURL = `http://localhost:${PORT}/Digital-Portfolio/`;
 
 /**
  * Runs against the production build (vite preview) using the locally installed Chrome,
@@ -11,13 +12,13 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [['list']],
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    baseURL,
     channel: 'chrome',
     trace: 'retain-on-failure',
   },
   webServer: {
     command: `npm run build && npx vite preview --port ${PORT} --strictPort`,
-    url: `http://localhost:${PORT}`,
+    url: baseURL,
     reuseExistingServer: true,
     timeout: 180_000,
   },

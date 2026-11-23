@@ -6,7 +6,7 @@ Single-page developer portfolio built with React, Vite, TypeScript, Tailwind CSS
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Dev server on http://localhost:5173 |
+| `npm run dev` | Dev server on http://localhost:5173/Digital-Portfolio/ |
 | `npm run build` | Type-check (`tsc`) and production build to `dist/` |
 | `npm run preview` | Serve the production build locally |
 | `npm run test:e2e` | Playwright tests against the production build (uses the locally installed Chrome) |

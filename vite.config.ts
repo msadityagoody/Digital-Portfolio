@@ -37,6 +37,7 @@ function cspMeta(): Plugin {
 }
 
 export default defineConfig({
+  base: '/Digital-Portfolio/',
   plugins: [react(), tailwindcss(), cspMeta()],
   build: {
     sourcemap: false,

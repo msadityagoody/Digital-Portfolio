@@ -30,7 +30,7 @@ async function isMobileProject(page: Page) {
 
 test('renders all sections without console errors', async ({ page }) => {
   const errors = trackErrors(page);
-  await page.goto('/');
+  await page.goto('./');
 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Building software that connects complex systems');
   for (const id of ['about', 'journey', 'work', 'skills', 'contact']) {
@@ -53,8 +53,45 @@ test('renders all sections without console errors', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('assets load from the project subpath', async ({ page, request, baseURL }) => {
+  const errors = trackErrors(page);
+  const outsideBase: string[] = [];
+  page.on('request', (req) => {
+    if (!req.url().startsWith(baseURL!)) outsideBase.push(req.url());
+  });
+  page.on('requestfailed', (req) => errors.push(`Failed request: ${req.url()}`));
+  page.on('response', (res) => {
+    if (res.status() >= 400) errors.push(`${res.status()} ${res.url()}`);
+  });
+  await page.goto('./');
+  const fonts = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return [...document.fonts].filter((face) => face.status === 'loaded').map((face) => face.family);
+  });
+  for (const family of ['Bricolage Grotesque', 'Geist', 'JetBrains Mono']) {
+    expect(fonts.some((name) => name.includes(family)), family).toBe(true);
+  }
+
+  const path = new URL(baseURL!).pathname;
+  const portrait = page.locator('[data-portrait] img');
+  await expect(portrait).toHaveAttribute('src', `${path}portrait.webp`);
+  await expect(portrait).toHaveAttribute('srcset', `${path}portrait-640.webp 640w, ${path}portrait.webp 1122w`);
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', `${path}favicon.svg`);
+  for (const [file, mime] of [
+    ['portrait.webp', 'image/webp'],
+    ['portrait-640.webp', 'image/webp'],
+    ['favicon.svg', 'image/svg+xml'],
+  ] as const) {
+    const res = await request.get(file);
+    expect(res.status(), file).toBe(200);
+    expect(res.headers()['content-type'], file).toContain(mime);
+  }
+  expect(outsideBase).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test('every reveal element ends up visible after scrolling', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.evaluate(async () => {
     for (let y = 0; y < document.body.scrollHeight; y += 300) {
       window.scrollTo(0, y);
@@ -74,7 +111,7 @@ test('every reveal element ends up visible after scrolling', async ({ page }) =>
 });
 
 test('deep link to #contact shows content immediately', async ({ page }) => {
-  await page.goto('/#contact');
+  await page.goto('./#contact');
   await page.waitForTimeout(1500);
   const heading = page.getByRole('heading', { level: 2, name: /Let.s build something together/ });
   await expect(heading).toBeInViewport();
@@ -82,14 +119,14 @@ test('deep link to #contact shows content immediately', async ({ page }) => {
 });
 
 test('no horizontal overflow', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.waitForTimeout(800);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
 test('project cards fit their content (no clipped text)', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const clipped = await page.$$eval('[data-card-inner]', (cards) =>
     cards
       .map((card) => {
@@ -101,17 +138,17 @@ test('project cards fit their content (no clipped text)', async ({ page }) => {
   expect(clipped).toEqual([]);
 });
 
-test('résumé download is linked and served', async ({ page, request }) => {
-  await page.goto('/');
+test('résumé download is linked and served', async ({ page, request, baseURL }) => {
+  await page.goto('./');
   const link = page.getByRole('link', { name: /Download résumé/ }).first();
-  await expect(link).toHaveAttribute('href', '/resume.pdf');
-  const res = await request.get('/resume.pdf');
+  await expect(link).toHaveAttribute('href', new URL('resume.pdf', baseURL).pathname);
+  const res = await request.get('resume.pdf');
   expect(res.status()).toBe(200);
   expect(res.headers()['content-type']).toContain('pdf');
 });
 
 test('external links are safe', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const links = await page.$$eval('a[target="_blank"]', (as) => as.map((a) => ({ href: a.getAttribute('href'), rel: a.getAttribute('rel') ?? '' })));
   expect(links.length).toBeGreaterThan(0);
   for (const link of links) {
@@ -122,7 +159,7 @@ test('external links are safe', async ({ page }) => {
 
 test('desktop nav links scroll to sections', async ({ page }) => {
   test.skip(await isMobileProject(page), 'desktop nav only');
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: /Skills/ }).click();
   await expect(page.locator('#skills')).toBeInViewport();
   await expect(page).toHaveURL(/#skills$/);
@@ -130,7 +167,7 @@ test('desktop nav links scroll to sections', async ({ page }) => {
 
 test('mobile menu: open, trap focus, escape, navigate', async ({ page }) => {
   test.skip(!(await isMobileProject(page)), 'mobile menu only');
-  await page.goto('/');
+  await page.goto('./');
   const toggle = page.getByRole('button', { name: 'Open menu' });
   await toggle.click();
   const dialog = page.getByRole('dialog', { name: 'Site menu' });
@@ -155,7 +192,7 @@ test('mobile menu: open, trap focus, escape, navigate', async ({ page }) => {
 
 test('keyboard: skip link is first and works', async ({ page }) => {
   test.skip(await isMobileProject(page), 'keyboard test on desktop');
-  await page.goto('/');
+  await page.goto('./');
   await page.keyboard.press('Tab');
   const skip = page.getByRole('link', { name: 'Skip to content' });
   await expect(skip).toBeFocused();
@@ -167,7 +204,7 @@ test('keyboard: skip link is first and works', async ({ page }) => {
 test('intro: plays once, hands off to the hero, then stays away for the session', async ({ page }) => {
   const errors = trackErrors(page);
   // Don't wait for the full load event (images): the intro is only ~2s long.
-  await page.goto('/', { waitUntil: 'commit' });
+  await page.goto('./', { waitUntil: 'commit' });
   const skip = page.getByRole('button', { name: 'Skip intro' });
   await expect(skip).toBeVisible();
   await expect(skip).toBeHidden({ timeout: 6000 });
@@ -178,7 +215,7 @@ test('intro: plays once, hands off to the hero, then stays away for the session'
 });
 
 test('intro: skip button and Escape shorten it', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   // The intro may already be finishing on a slow, parallel run: skipping must never hang.
   await page.getByRole('button', { name: 'Skip intro' }).click({ timeout: 1500 }).catch(() => undefined);
   await expect(page.getByRole('button', { name: 'Skip intro' })).toBeHidden({ timeout: 2500 });
@@ -186,7 +223,7 @@ test('intro: skip button and Escape shorten it', async ({ page }) => {
 });
 
 test('custom cursor only for a fine pointer', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.waitForTimeout(300);
   const { hasCursor, finePointer } = await page.evaluate(() => ({
     hasCursor: document.documentElement.classList.contains('has-cursor'),
@@ -208,7 +245,7 @@ const fillScale = (page: Page) =>
   page.$eval('[data-journey-fill]', (el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).d);
 
 test('hero portrait: real photo loads with alt text, placeholder gone', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const img = page.getByRole('img', { name: 'Black-and-white portrait of Aditya MS' });
   await expect(img).toBeVisible();
   await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
@@ -223,14 +260,14 @@ test('hero portrait: real photo loads with alt text, placeholder gone', async ({
 });
 
 test('hero portrait: hover reveals the source; toggle shows it in full (keyboard/touch too)', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const layer = page.locator('[data-source-layer]');
   await expect(page.locator('[data-source-canvas]')).toHaveAttribute('data-rendered', 'true');
 
   const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
   if (finePointer) {
-    const box = (await page.locator('[data-portrait] img').boundingBox())!;
-    await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.3, { steps: 5 });
+    // Wait for the entrance animation to uncover the portrait before moving the pointer.
+    await page.locator('[data-portrait]').hover();
     await expect(layer).toHaveAttribute('data-mode', 'hover');
     await page.mouse.move(5, 5);
     await expect(layer).toHaveAttribute('data-mode', 'off');
@@ -246,7 +283,7 @@ test('hero portrait: hover reveals the source; toggle shows it in full (keyboard
 });
 
 test('journey: four milestones, oldest first, internship vs full-time', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const milestones = page.locator('[data-milestone]');
   await expect(milestones).toHaveCount(4);
   await expect(milestones.locator('h3')).toHaveText([
@@ -264,7 +301,7 @@ test('journey: four milestones, oldest first, internship vs full-time', async ({
 });
 
 test('journey: progress line follows scroll and the full-time milestone activates last', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await scrollToSel(page, '[data-milestone]', -page.viewportSize()!.height * 0.5);
   await page.waitForTimeout(900);
   const early = await fillScale(page);
@@ -285,7 +322,7 @@ test('journey: progress line follows scroll and the full-time milestone activate
 });
 
 test('credentials: visible heading, all five certifications, SAP featured', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await scrollToSel(page, '#journey ul[aria-label="Certifications"]', -200);
   await page.waitForTimeout(1500);
   await expect(page.getByRole('heading', { level: 3, name: 'Credentials' })).toBeVisible();
@@ -306,7 +343,7 @@ test('credentials: visible heading, all five certifications, SAP featured', asyn
 });
 
 test('skills: core keys update the detail panel by pointer and keyboard', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const keys = page.getByRole('list', { name: 'Core stack' }).getByRole('button');
   await expect(keys).toHaveCount(12);
   const panel = page.locator('#skill-panel');
@@ -337,7 +374,7 @@ test.describe('reduced motion', () => {
 
   test('content is static and fully visible', async ({ page }) => {
     const errors = trackErrors(page);
-    await page.goto('/');
+    await page.goto('./');
     await expect(page.locator('.hero-line')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Skip intro' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.classList.contains('has-cursor'))).toBe(false);

@@ -18,7 +18,7 @@ export interface Profile {
   coreStack: string[];
   links: ExternalLink[];
   /**
-   * Hero portrait. Put the image in /public and set { src: '/portrait.webp', alt: '...' }.
+   * Hero portrait. Place images in public/ and prefix their URLs with import.meta.env.BASE_URL.
    * While undefined, the hero shows a clearly labelled photo slot.
    */
   portrait?: { src: string; srcSet?: string; alt: string };

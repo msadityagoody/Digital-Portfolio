@@ -1,5 +1,7 @@
 import type { Profile } from './types';
 
+const base = import.meta.env.BASE_URL;
+
 export const profile: Profile = {
   name: 'Aditya MS',
   role: 'Software Development Engineer',
@@ -25,9 +27,9 @@ export const profile: Profile = {
     { label: 'LeetCode', href: 'https://leetcode.com/u/msadityagoody', display: 'leetcode.com/u/msadityagoody' },
   ],
   portrait: {
-    src: '/portrait.webp',
-    srcSet: '/portrait-640.webp 640w, /portrait.webp 1122w',
+    src: `${base}portrait.webp`,
+    srcSet: `${base}portrait-640.webp 640w, ${base}portrait.webp 1122w`,
     alt: 'Black-and-white portrait of Aditya MS',
   },
-  resumeUrl: `${import.meta.env.BASE_URL}resume.pdf`,
+  resumeUrl: `${base}resume.pdf`,
 };
