@@ -5,6 +5,7 @@
 
 /* Sticky project deck only where there is room for a whole card in the viewport. */
 @custom-variant deck (@media (min-width: 64rem) and (min-height: 45rem));
+@custom-variant hero-wide (@media (min-width: 80rem) and (hover: hover) and (pointer: fine));
 
 @theme {
   --color-bg: #07080a;
@@ -210,7 +211,7 @@
     -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 96%);
     mask-image: linear-gradient(to bottom, #000 55%, transparent 96%);
   }
-  @media (min-width: 64rem) {
+  @media (min-width: 80rem) and (hover: hover) and (pointer: fine) {
     .portrait-fade {
       -webkit-mask-image:
         linear-gradient(to bottom, #000 62%, transparent 98%), linear-gradient(to right, transparent 0%, #000 32%);

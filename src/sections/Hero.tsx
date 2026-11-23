@@ -82,8 +82,8 @@ export function Hero() {
         <div className="absolute left-[-10%] top-[20%] size-[40rem] max-w-[90vw] rounded-full bg-accent/[0.05] blur-[120px]" />
       </div>
 
-      <div className="container-x grid flex-1 items-center gap-10 pb-10 pt-6 lg:relative lg:grid-cols-12 lg:gap-12 lg:pb-14 lg:pt-10">
-        <div ref={content} className="relative z-10 flex flex-col gap-8 lg:col-span-7 lg:gap-10">
+      <div className="container-x grid flex-1 items-center gap-10 pb-10 pt-6 hero-wide:relative hero-wide:grid-cols-12 hero-wide:gap-12 hero-wide:pb-14 hero-wide:pt-10">
+        <div ref={content} className="relative z-10 flex flex-col gap-8 hero-wide:col-span-7 hero-wide:gap-10">
           <p data-hero-fade className="marker">
             <span>
               {profile.role}
@@ -118,10 +118,8 @@ export function Hero() {
         <div
           className={
             profile.portrait
-              ? // Full-bleed photo on mobile; on desktop the right half of the content container (behind the text),
-                // so it stays aligned with the nav on wide screens instead of hugging the window edge.
-                'order-first -mx-[var(--gutter)] -mb-28 -mt-6 h-[min(62svh,34rem)] sm:-mb-36 sm:h-[38rem] lg:absolute lg:top-0 lg:bottom-0 lg:right-0 lg:z-0 lg:m-0 lg:h-auto lg:w-[52%]'
-              : 'order-first h-[min(40svh,21rem)] sm:h-[30rem] lg:order-none lg:col-span-5 lg:h-[min(74svh,40rem)]'
+              ? 'order-first mx-auto w-full max-w-[min(28rem,48svh)] hero-wide:absolute hero-wide:inset-y-0 hero-wide:right-0 hero-wide:z-0 hero-wide:m-0 hero-wide:w-[52%] hero-wide:max-w-none'
+              : 'order-first h-[min(40svh,21rem)] sm:h-[30rem] hero-wide:order-none hero-wide:col-span-5 hero-wide:h-[min(74svh,40rem)]'
           }
         >
           <Portrait />

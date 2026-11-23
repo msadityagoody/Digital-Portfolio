@@ -46,26 +46,28 @@ function PhotoPortrait({ photo }: { photo: NonNullable<typeof profile.portrait> 
     <figure
       data-portrait
       data-photo="true"
-      className="group/portrait relative h-full w-full overflow-hidden"
+      className="group/portrait relative grid w-full overflow-hidden hero-wide:block hero-wide:h-full"
       onPointerMove={onMove}
       onPointerLeave={onLeave}
     >
-      <div data-portrait-inner className="portrait-fade absolute -inset-y-[6%] inset-x-0">
-        <img
-          ref={img}
-          src={photo.src}
-          srcSet={photo.srcSet}
-          sizes="(min-width: 64rem) 50vw, 100vw"
-          alt={photo.alt}
-          width={1122}
-          height={1402}
-          decoding="async"
-          fetchPriority="high"
-          className="h-full w-full object-cover object-[50%_22%]"
-        />
-        <div ref={layer} data-source-layer data-mode={mode} aria-hidden="true" className="source-layer absolute inset-0">
-          <div className="absolute inset-0 bg-bg/80" />
-          <canvas ref={canvas} data-source-canvas className="absolute inset-0 h-full w-full" />
+      <div className="relative col-start-1 row-start-1 aspect-[1122/1402] overflow-hidden hero-wide:absolute hero-wide:inset-0 hero-wide:aspect-auto">
+        <div data-portrait-inner className="portrait-fade absolute inset-0 hero-wide:-inset-y-[6%]">
+          <img
+            ref={img}
+            src={photo.src}
+            srcSet={photo.srcSet}
+            sizes="(min-width: 80rem) and (hover: hover) and (pointer: fine) min(52vw, 46.8rem), min(calc(100vw - clamp(2.5rem, 8vw, 6rem)), 28rem, 48svh)"
+            alt={photo.alt}
+            width={1122}
+            height={1402}
+            decoding="async"
+            fetchPriority="high"
+            className="h-full w-full object-cover object-[50%_22%]"
+          />
+          <div ref={layer} data-source-layer data-mode={mode} aria-hidden="true" className="source-layer absolute inset-0">
+            <div className="absolute inset-0 bg-bg/80" />
+            <canvas ref={canvas} data-source-canvas className="absolute inset-0 h-full w-full" />
+          </div>
         </div>
       </div>
 
@@ -82,7 +84,7 @@ function PhotoPortrait({ photo }: { photo: NonNullable<typeof profile.portrait> 
       </span>
 
       {/* Toggle: works for keyboard and touch too */}
-      <div data-portrait-card className="absolute right-4 top-4 sm:right-6 lg:right-[var(--gutter)] lg:top-6">
+      <div data-portrait-card className="relative col-start-1 row-start-1 m-2 place-self-end hero-wide:absolute hero-wide:right-[var(--gutter)] hero-wide:top-6 hero-wide:m-0">
         <button
           type="button"
           aria-pressed={mode === 'full'}
@@ -99,12 +101,12 @@ function PhotoPortrait({ photo }: { photo: NonNullable<typeof profile.portrait> 
       <p
         data-portrait-card
         aria-hidden="true"
-        className="absolute bottom-6 left-[34%] hidden font-mono text-[0.6875rem] text-muted [@media(hover:hover)_and_(pointer:fine)]:lg:block"
+        className="absolute bottom-6 left-[34%] hidden font-mono text-[0.6875rem] text-muted hero-wide:block"
       >
         Move over the picture to read the source
       </p>
 
-      <StatusCard className="bottom-28 right-4 w-[min(17rem,calc(100%-2rem))] sm:right-6 lg:bottom-[22%] lg:right-[var(--gutter)] lg:w-[19rem]" />
+      <StatusCard className="relative mx-auto w-full max-w-[19rem] hero-wide:absolute hero-wide:bottom-[22%] hero-wide:right-[var(--gutter)]" />
     </figure>
   );
 }
@@ -133,7 +135,7 @@ function PlaceholderPortrait() {
         </div>
       </div>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg/85 via-transparent to-transparent" />
-      <StatusCard className="inset-x-3 bottom-3 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[min(20rem,calc(100%-2rem))]" />
+      <StatusCard className="absolute inset-x-3 bottom-3 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[min(20rem,calc(100%-2rem))]" />
     </figure>
   );
 }
@@ -143,7 +145,7 @@ function StatusCard({ className }: { className: string }) {
   return (
     <figcaption
       data-portrait-card
-      className={`absolute rounded-[14px] border border-line bg-bg/80 p-4 font-mono text-xs backdrop-blur-md ${className}`}
+      className={`rounded-[14px] border border-line bg-bg/80 p-4 font-mono text-xs backdrop-blur-md ${className}`}
     >
       <span className="flex items-center justify-between gap-4 text-muted">
         <span className="flex items-center gap-2 text-accent">

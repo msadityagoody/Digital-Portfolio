@@ -250,7 +250,8 @@ test('hero portrait: real photo loads with alt text, placeholder gone', async ({
   await expect(img).toBeVisible();
   await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
   await expect(page.getByText('Photo placeholder')).toHaveCount(0);
-  // The headline stays above the photo and readable.
+  // The stacked layout can put the headline below the fold on shorter screens.
+  await page.locator('#hero-title').scrollIntoViewIfNeeded();
   const z = await page.evaluate(() => {
     const h = document.querySelector('#hero-title')!.getBoundingClientRect();
     const el = document.elementFromPoint(h.left + 20, h.top + h.height / 2);
@@ -371,6 +372,21 @@ test('skills: core keys update the detail panel by pointer and keyboard', async 
 
 test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
+
+  test('touch portrait stays centered and proportional after rotation', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'exercise phone and tablet sizes with a touch pointer');
+    await page.goto('./');
+    const photo = page.locator('[data-portrait] img');
+    await expect(photo).toBeVisible();
+    for (const [width, height] of [[390, 844], [844, 390], [768, 1024], [1024, 768], [1366, 1024]] as const) {
+      await page.setViewportSize({ width, height });
+      const frame = (await photo.boundingBox())!;
+      expect(frame.x + frame.width / 2).toBeCloseTo(width / 2, 0);
+      expect(frame.width / frame.height).toBeCloseTo(1122 / 1402, 3);
+      const caption = (await page.locator('[data-portrait] figcaption').boundingBox())!;
+      expect(caption.y).toBeGreaterThanOrEqual(frame.y + frame.height - 1);
+    }
+  });
 
   test('content is static and fully visible', async ({ page }) => {
     const errors = trackErrors(page);
